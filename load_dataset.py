@@ -1,11 +1,13 @@
 from __future__ import print_function
 from scipy import misc
+from imageio import imread
 import os
 import numpy as np
 import sys
+misc.imread = imread
+
 
 def load_test_data(phone, dped_dir, IMAGE_SIZE):
-
     test_directory_phone = dped_dir + str(phone) + '/test_data/patches/' + str(phone) + '/'
     test_directory_dslr = dped_dir + str(phone) + '/test_data/patches/canon/'
 

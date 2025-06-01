@@ -47,13 +47,15 @@ def process_command_args(arguments):
     w_color = 0.5
     w_texture = 1
     w_tv = 2000
-
+	
     dped_dir = 'dped/'
     vgg_dir = 'vgg_pretrained/imagenet-vgg-verydeep-19.mat'
     eval_step = 1000
 
-    phone = ""
+    gpu_number = 0
 
+    phone = ""
+	
     for args in arguments:
 
         if args.startswith("model"):
@@ -95,16 +97,18 @@ def process_command_args(arguments):
 
         if args.startswith("eval_step"):
             eval_step = int(args.split("=")[1])
-
+        
+        if args.startswith("gpu"):
+            gpu_number = int(args.split("=")[1])
 
     if phone == "":
         print("\nPlease specify the camera model by running the script with the following parameter:\n")
         print("python train_model.py model={iphone,blackberry,sony}\n")
         sys.exit()
 
-    if phone not in ["iphone", "sony", "blackberry"]:
+    if phone not in ["iphone", "sony", "blackberry", "kvadra"]:
         print("\nPlease specify the correct camera model:\n")
-        print("python train_model.py model={iphone,blackberry,sony}\n")
+        print("python train_model.py model={iphone,blackberry,sony, kvadra}\n")
         sys.exit()
 
     print("\nThe following parameters will be applied for CNN training:\n")
@@ -122,10 +126,11 @@ def process_command_args(arguments):
     print("Path to DPED dataset:", dped_dir)
     print("Path to VGG-19 network:", vgg_dir)
     print("Evaluation step:", str(eval_step))
+    print("Gpu number: ", str(gpu_number))
     print()
     return phone, batch_size, train_size, learning_rate, num_train_iters, \
             w_content, w_color, w_texture, w_tv,\
-            dped_dir, vgg_dir, eval_step
+            dped_dir, vgg_dir, eval_step, gpu_number
 
 
 def process_test_model_args(arguments):
@@ -173,6 +178,8 @@ def get_resolutions():
 
     res_sizes["iphone"] = [1536, 2048]
     res_sizes["iphone_orig"] = [1536, 2048]
+    res_sizes["kvadra"] = [3136, 4224]
+    res_sizes["kvadra_orig"] = [3136, 4224]
     res_sizes["blackberry"] = [1560, 2080]
     res_sizes["blackberry_orig"] = [1560, 2080]
     res_sizes["sony"] = [1944, 2592]

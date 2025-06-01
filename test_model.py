@@ -19,7 +19,6 @@ res_sizes = utils.get_resolutions()
 
 # get the specified image resolution
 IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_SIZE = utils.get_specified_res(res_sizes, phone, resolution)
-
 # disable gpu if specified
 config = tf.compat.v1.ConfigProto(device_count={'GPU': 0}) if use_gpu == "false" else None
 
@@ -33,6 +32,7 @@ enhanced = resnet(x_image)
 with tf.compat.v1.Session(config=config) as sess:
 
     test_dir = dped_dir + phone.replace("_orig", "") + "/test_data/full_size_test_images/"
+    #test_dir = dped_dir + 'kvadra' + "/test_data/full_size_test_images/"
     test_photos = [f for f in os.listdir(test_dir) if os.path.isfile(test_dir + f)]
 
     if test_subset == "small":
@@ -59,27 +59,25 @@ with tf.compat.v1.Session(config=config) as sess:
             # get enhanced image
 
             enhanced_2d = sess.run(enhanced, feed_dict={x_: image_crop_2d})
-            enhanced_image = np.reshape(enhanced_2d, [IMAGE_HEIGHT, IMAGE_WIDTH, 3])
+            enhanced_image = np.reshape(enhanced_2d, [IMAGE_HEIGHT, IMAGE_WIDTH, 3]).clip(0, 1)
 
             before_after = np.hstack((image_crop, enhanced_image))
             photo_name = photo.rsplit(".", 1)[0]
 
             # save the results as .png images
-
+            enhanced_image = (enhanced_image * 255).astype(np.uint8)
+            before_after = (before_after * 255).astype(np.uint8)
             imageio.imwrite("visual_results/" + phone + "_" + photo_name + "_enhanced.png", enhanced_image)
             imageio.imwrite("visual_results/" + phone + "_" + photo_name + "_before_after.png", before_after)
 
     else:
 
         num_saved_models = int(len([f for f in os.listdir("models/") if f.startswith(phone + "_iteration")]) / 2)
-
         if iteration == "all":
             iteration = np.arange(1, num_saved_models) * 1000
         else:
             iteration = [int(iteration)]
-
         for i in iteration:
-
             # load pre-trained model
             saver = tf.compat.v1.train.Saver()
             saver.restore(sess, "models/" + phone + "_iteration_" + str(i) + ".ckpt")
@@ -98,12 +96,14 @@ with tf.compat.v1.Session(config=config) as sess:
                 # get enhanced image
 
                 enhanced_2d = sess.run(enhanced, feed_dict={x_: image_crop_2d})
-                enhanced_image = np.reshape(enhanced_2d, [IMAGE_HEIGHT, IMAGE_WIDTH, 3])
+                enhanced_image = np.reshape(enhanced_2d, [IMAGE_HEIGHT, IMAGE_WIDTH, 3]).clip(0, 1)
 
                 before_after = np.hstack((image_crop, enhanced_image))
                 photo_name = photo.rsplit(".", 1)[0]
 
                 # save the results as .png images
+                enhanced_image = (enhanced_image * 255).astype(np.uint8)
+                before_after = (before_after * 255).astype(np.uint8)
 
                 imageio.imwrite("visual_results/" + phone + "_" + photo_name + "_iteration_" + str(i) + "_enhanced.png", enhanced_image)
                 imageio.imwrite("visual_results/" + phone + "_" + photo_name + "_iteration_" + str(i) + "_before_after.png", before_after)
