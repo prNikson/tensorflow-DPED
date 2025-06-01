@@ -4,6 +4,7 @@ import tensorflow as tf
 import imageio
 import numpy as np
 import sys
+import wandb
 
 tf.compat.v1.disable_v2_behavior()
 
@@ -23,12 +24,29 @@ PATCH_SIZE = PATCH_WIDTH * PATCH_HEIGHT * 3
 
 phone, batch_size, train_size, learning_rate, num_train_iters, \
 w_content, w_color, w_texture, w_tv, \
-dped_dir, vgg_dir, eval_step = utils.process_command_args(sys.argv)
+dped_dir, vgg_dir, eval_step, gpu_number = utils.process_command_args(sys.argv)
+
+run = wandb.init(
+	project="tensorflow_dped",
+	config={
+		"batch_size": batch_size,
+		"train_size": train_size,
+		"learning_rate": learning_rate,
+		"num_train_iters": num_train_iters,
+		"w_content": w_content,
+		"w_color": w_color,
+		"w_texture": w_texture,
+		"w_tv": w_tv,
+		"eval_step": eval_step,
+	},
+)
 
 np.random.seed(0)
 
 # defining system architecture
-
+gpus = tf.config.list_physical_devices('GPU')
+print(gpus)
+tf.config.experimental.set_visible_devices(gpus[gpu_number], 'GPU')
 with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
     
     # placeholders for training data
@@ -203,7 +221,11 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
             logs_gen = "generator losses | train: %.4g, test: %.4g | content: %.4g, color: %.4g, texture: %.4g, tv: %.4g | psnr: %.4g, ms-ssim: %.4g\n" % \
                   (train_loss_gen, test_losses_gen[0][0], test_losses_gen[0][1], test_losses_gen[0][2],
                    test_losses_gen[0][3], test_losses_gen[0][4], test_losses_gen[0][5], loss_ssim)
-
+            wandb.log({"discriminator_accuracy_train": train_acc_discrim, "discriminator_accuracy_test": test_accuracy_disc,\
+                "generator_losses_train": train_loss_gen, "generator_losses_test": test_losses_gen[0][0], "content": test_losses_gen[0][1],\
+                "color": test_losses_gen[0][2], "texture": test_losses_gen[0][3], "tv": test_losses_gen[0][4], "psnr": test_losses_gen[0][5],\
+                "ms-SSIM": loss_ssim,
+            })
             print(logs_disc)
             print(logs_gen)
 
@@ -223,6 +245,7 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
             idx = 0
             for crop in enhanced_crops:
                 before_after = np.hstack((np.reshape(test_crops[idx], [PATCH_HEIGHT, PATCH_WIDTH, 3]), crop))
+                before_after = (before_after * 255).astype(np.uint8)
                 imageio.imwrite('results/' + str(phone)+ "_" + str(idx) + '_iteration_' + str(i) + '.jpg', before_after)
                 idx += 1
 
