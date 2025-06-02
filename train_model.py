@@ -199,7 +199,7 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
 
                 be = j * batch_size
                 en = (j+1) * batch_size
-
+ 
                 swaps = np.reshape(np.random.randint(0, 2, batch_size), [batch_size, 1])
 
                 phone_images = test_data[be:en]
@@ -246,7 +246,7 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
             for crop in enhanced_crops:
                 before_after = np.hstack((np.reshape(test_crops[idx], [PATCH_HEIGHT, PATCH_WIDTH, 3]), crop))
                 before_after = (before_after * 255).astype(np.uint8)
-                imageio.imwrite('results/' + str(phone)+ "_" + str(idx) + '_iteration_' + str(i) + '.jpg', before_after)
+                imageio.imwrite('results/' + str(phone)+ "_" + str(idx) + '_iteration_' + str(i) + '.png', before_after)
                 idx += 1
 
             train_loss_gen = 0.0
