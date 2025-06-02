@@ -187,7 +187,8 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
                                         feed_dict={phone_: phone_images, dslr_: dslr_images, adv_: swaps})
         train_acc_discrim += accuracy_temp / eval_step
 
-        if i % eval_step == 0:
+        # if i % eval_step == 0:
+        if True:
 
             # test generator and discriminator CNNs
 
@@ -239,7 +240,7 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
             logs.close()
 
             # save visual results for several test image crops
-
+        if i % eval_step == 0:
             enhanced_crops = sess.run(enhanced, feed_dict={phone_: test_crops, dslr_: dslr_images, adv_: all_zeros})
 
             idx = 0
