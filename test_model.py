@@ -50,9 +50,9 @@ with tf.compat.v1.Session(config=config) as sess:
             # load training image and crop it if necessary
 
             print("Testing original " + phone.replace("_orig", "") + " model, processing image " + photo)
-            #image = np.float16(np.array(Image.fromarray(imageio.imread(test_dir + photo))
-            #                            .resize([res_sizes[phone][1], res_sizes[phone][0]]))) / 255
-            image = np.array(Image.fromarray(imageio.imread(test_dir + photo)).resize([res_sizes[phone][1], res_sizes[phone][0]]), dtype=np.float32) / 255.0
+            image = np.float16(np.array(Image.fromarray(imageio.imread(test_dir + photo))
+                                        .resize([res_sizes[phone][1], res_sizes[phone][0]]))) / 255
+            #image = np.array(Image.fromarray(imageio.imread(test_dir + photo)).resize([res_sizes[phone][1], res_sizes[phone][0]]), dtype=np.float32) / 255.0
 
             image_crop = utils.extract_crop(image, resolution, phone, res_sizes)
             image_crop_2d = np.reshape(image_crop, [1, IMAGE_SIZE])
@@ -88,9 +88,9 @@ with tf.compat.v1.Session(config=config) as sess:
                 # load training image and crop it if necessary
 
                 print("iteration " + str(i) + ", processing image " + photo)
-                #image = np.float16(np.array(Image.fromarray(imageio.imread(test_dir + photo))
-                #                            .resize([res_sizes[phone][1], res_sizes[phone][0]]))) / 255
-                image = np.array(Image.fromarray(imageio.imread(test_dir + photo)).resize([res_sizes[phone][1], res_sizes[phone][0]]), dtype=np.float32) / 255.0
+                image = np.float16(np.array(Image.fromarray(imageio.imread(test_dir + photo))
+                                            .resize([res_sizes[phone][1], res_sizes[phone][0]]))) / 255
+                #image = np.array(Image.fromarray(imageio.imread(test_dir + photo)).resize([res_sizes[phone][1], res_sizes[phone][0]]), dtype=np.float32) / 255.0
 
                 image_crop = utils.extract_crop(image, resolution, phone, res_sizes)
                 image_crop_2d = np.reshape(image_crop, [1, IMAGE_SIZE])
@@ -100,12 +100,12 @@ with tf.compat.v1.Session(config=config) as sess:
                 enhanced_2d = sess.run(enhanced, feed_dict={x_: image_crop_2d})
                 enhanced_image = np.reshape(enhanced_2d, [IMAGE_HEIGHT, IMAGE_WIDTH, 3]).clip(0, 1)
 
-                before_after = np.hstack((image_crop, enhanced_image))
+                #before_after = np.hstack((image_crop, enhanced_image))
                 photo_name = photo.rsplit(".", 1)[0]
 
                 # save the results as .png images
                 enhanced_image = (enhanced_image * 255).astype(np.uint8)
-                before_after = (before_after * 255).astype(np.uint8)
+                #before_after = (before_after * 255).astype(np.uint8)
 
-                imageio.imwrite("visual_results/" + phone + "_" + photo_name + "_iteration_" + str(i) + "_enhanced.png", enhanced_image)
-                imageio.imwrite("visual_results/" + phone + "_" + photo_name + "_iteration_" + str(i) + "_before_after.png", before_after)
+                imageio.imwrite("test_folder/" + phone + "_" + photo_name + "_iteration_" + str(i) + "_enhanced.png", enhanced_image)
+                #imageio.imwrite("visual_results/" + phone + "_" + photo_name + "_iteration_" + str(i) + "_before_after.png", before_after)
