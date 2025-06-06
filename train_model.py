@@ -27,7 +27,7 @@ w_content, w_color, w_texture, w_tv, \
 dped_dir, vgg_dir, eval_step, gpu_number = utils.process_command_args(sys.argv)
 
 run = wandb.init(
-	project="tensorflow_dped",
+	project="dped_300k",
 	config={
 		"batch_size": batch_size,
 		"train_size": train_size,
