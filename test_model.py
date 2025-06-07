@@ -8,11 +8,16 @@ from models import resnet
 import utils
 import os
 import sys
+import os
+
 
 tf.compat.v1.disable_v2_behavior()
 
 # process command arguments
-phone, dped_dir, test_subset, iteration, resolution, use_gpu = utils.process_test_model_args(sys.argv)
+phone, dped_dir, test_subset, iteration, resolution, use_gpu, models_folder = utils.process_test_model_args(sys.argv)
+
+if not os.path.exists(models_folder):
+    os.mkdir(models_folder)
 
 # get all available image resolutions
 res_sizes = utils.get_resolutions()
@@ -73,7 +78,7 @@ with tf.compat.v1.Session(config=config) as sess:
 
     else:
 
-        num_saved_models = int(len([f for f in os.listdir("models/") if f.startswith(phone + "_iteration")]) / 2)
+        num_saved_models = int(len([f for f in os.listdir(models_folder) if f.startswith(phone + "_iteration")]) / 2)
         if iteration == "all":
             iteration = np.arange(1, num_saved_models) * 1000
         else:
@@ -81,7 +86,7 @@ with tf.compat.v1.Session(config=config) as sess:
         for i in iteration:
             # load pre-trained model
             saver = tf.compat.v1.train.Saver()
-            saver.restore(sess, "models/" + phone + "_iteration_" + str(i) + ".ckpt")
+            saver.restore(sess, models_folder + "/" + phone + "_iteration_" + str(i) + ".ckpt")
 
             for photo in test_photos:
 
@@ -106,6 +111,6 @@ with tf.compat.v1.Session(config=config) as sess:
                 # save the results as .png images
                 enhanced_image = (enhanced_image * 255).astype(np.uint8)
                 #before_after = (before_after * 255).astype(np.uint8)
-
+    
                 imageio.imwrite("test_folder/" + phone + "_" + photo_name + "_iteration_" + str(i) + "_enhanced.png", enhanced_image)
                 #imageio.imwrite("visual_results/" + phone + "_" + photo_name + "_iteration_" + str(i) + "_before_after.png", before_after)
