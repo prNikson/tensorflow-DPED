@@ -27,11 +27,11 @@ uv sync
 7. Также можете скачать наш датасет и разместить его в папке `dped/`, там появится папка `kvadra`.
 Ссылка для скачивания: https://huggingface.co/datasets/i44p/dped-pytorch/tree/main
 Основные файлы:
-Обучающая выборка фотографий: `train.tar.zst`
-Тестовая выборка фотографий: `test.tar.zst`
-Патчи для обучения (~300k патчей): `train_patches.tar.zst` (собраны с фотографий обучающей выборки)
-Патчи для тестирования (~5k патчей): `test_patches.tar.zst` (собраны с фотографий тестовой выборки)
-Весь датасет (~1200 фотографий): `full_dataset_jpeg.tar.zst`
+- Обучающая выборка фотографий: `train.tar.zst`
+- Тестовая выборка фотографий: `test.tar.zst`
+- Патчи для обучения (~300k патчей): `train_patches.tar.zst` (собраны с фотографий обучающей выборки)
+- Патчи для тестирования (~5k патчей): `test_patches.tar.zst` (собраны с фотографий тестовой выборки)
+- Весь датасет (~1200 фотографий): `full_dataset_jpeg.tar.zst`
 Извлеките `train_patches.tar.zst` и `test_patches.tar.zst` по пути `dped/kvadra/training_data/` и `dped/kvadra/test_data/patches/` соответсвенно.  
 Переименуйте папку `target` в `canon` и папку `input` в `kvadra`.
 
