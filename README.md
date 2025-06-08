@@ -7,7 +7,7 @@
 - TensorFlow 2.19
 - Nvidia GPU
 
-#### 3. First steps
+#### 2. First steps
 1. Clone this repository
 ```bash
 git clone https://github.com/prNikson/tensorflow-DPED
@@ -34,7 +34,7 @@ full dataset (~1200 photos): `full_dataset_jpeg.tar.zst`
 Extract `train_patches.tar.zst` and `test_patches.tar.zst` into `dped/kvadra/training_data/` and `dped/kvadra/test_data/patches/`, respectively.  
 Rename folder `target` to `canon` and folder `input` to `kvadra`.
 
-#### 4. Train the model
+#### 3. Train the model
 ```bash
 uv run train_model.py model=<model> batch_size=<batch_size>
 ```
@@ -64,7 +64,7 @@ Example:
 uv run train_model.py model=kvadra batch_size=50 dped_dir=dped/
 ```
 
-#### 6. Test the obtained models
+#### 4. Test the obtained models
 
 ```bash
 uv test_model.py model=<model>
@@ -102,7 +102,7 @@ iteration=19000 by default
 gpu=false by default
 <br/>
 
-#### 7. Folder structure
+#### 5. Folder structure
 
 >```dped/```              &nbsp; - &nbsp; the folder with the DPED dataset <br/>
 >```models/```            &nbsp; - &nbsp; logs and models that are saved during the training process <br/>
