@@ -5,6 +5,7 @@ import imageio
 import numpy as np
 import sys
 import wandb
+import tqdm
 
 tf.compat.v1.disable_v2_behavior()
 
@@ -27,7 +28,7 @@ w_content, w_color, w_texture, w_tv, \
 dped_dir, vgg_dir, eval_step, gpu_number = utils.process_command_args(sys.argv)
 
 run = wandb.init(
-	project="dped_300k",
+	project="project_name",
 	config={
 		"batch_size": batch_size,
 		"train_size": train_size,
@@ -45,8 +46,8 @@ np.random.seed(0)
 
 # defining system architecture
 gpus = tf.config.list_physical_devices('GPU')
-print(gpus)
-tf.config.experimental.set_visible_devices(gpus[gpu_number], 'GPU')
+if len(gpu) > 0:
+    tf.config.experimental.set_visible_devices(gpus[gpu_number], 'GPU')
 with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
     
     # placeholders for training data
@@ -160,7 +161,7 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
     logs = open('models/' + phone + '.txt', "w+")
     logs.close()
 
-    for i in range(num_train_iters):
+    for i in trange(num_train_iters):
 
         # train generator
 
@@ -194,8 +195,8 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
             test_losses_gen = np.zeros((1, 6))
             test_accuracy_disc = 0.0
             loss_ssim = 0.0
-
-            for j in range(num_test_batches):
+            print("testing the model on test patches")
+            for j in trange(num_test_batches):
 
                 be = j * batch_size
                 en = (j+1) * batch_size
@@ -239,6 +240,7 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
             logs.close()
 
             # save visual results for several test image crops
+			print("saving visual results for several test image crops")
             enhanced_crops = sess.run(enhanced, feed_dict={phone_: test_crops, dslr_: dslr_images, adv_: all_zeros})
 
             idx = 0
@@ -252,7 +254,7 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
             train_acc_discrim = 0.0
 
             # save the model that corresponds to the current iteration
-
+            print("saving the model on current iteration")
             saver.save(sess, 'models/' + str(phone) + '_iteration_' + str(i) + '.ckpt', write_meta_graph=False)
 
             # reload a different batch of training data

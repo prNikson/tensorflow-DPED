@@ -37,7 +37,6 @@ enhanced = resnet(x_image)
 with tf.compat.v1.Session(config=config) as sess:
 
     test_dir = dped_dir + phone.replace("_orig", "") + "/test_data/full_size_test_images/"
-    #test_dir = dped_dir + 'kvadra' + "/test_data/full_size_test_images/"
     test_photos = [f for f in os.listdir(test_dir) if os.path.isfile(test_dir + f)]
 
     if test_subset == "small":
@@ -110,7 +109,7 @@ with tf.compat.v1.Session(config=config) as sess:
 
                 # save the results as .png images
                 enhanced_image = (enhanced_image * 255).astype(np.uint8)
-                #before_after = (before_after * 255).astype(np.uint8)
+                before_after = (before_after * 255).astype(np.uint8)
     
-                imageio.imwrite("test_folder/" + phone + "_" + photo_name + "_iteration_" + str(i) + "_enhanced.png", enhanced_image)
-                #imageio.imwrite("visual_results/" + phone + "_" + photo_name + "_iteration_" + str(i) + "_before_after.png", before_after)
+                imageio.imwrite("visual_results/" + phone + "_" + photo_name + "_iteration_" + str(i) + "_enhanced.png", enhanced_image)
+                imageio.imwrite("visual_results/" + phone + "_" + photo_name + "_iteration_" + str(i) + "_before_after.png", before_after)

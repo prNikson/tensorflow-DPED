@@ -11,6 +11,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('path')
 parser.add_argument('--iter', nargs='?', default=19000)
 parser.add_argument('--gpu', nargs='?', default='false')
+
 path_to_image = parser.parse_args().path
 it = int(parser.parse_args().iter)
 gpu = parser.parse_args().gpu
