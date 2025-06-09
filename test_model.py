@@ -14,7 +14,7 @@ import os
 tf.compat.v1.disable_v2_behavior()
 
 # process command arguments
-phone, dped_dir, test_subset, iteration, resolution, use_gpu, models_folder = utils.process_test_model_args(sys.argv)
+phone, dped_dir, test_subset, iteration, resolution, use_gpu = utils.process_test_model_args(sys.argv)
 
 if not os.path.exists(models_folder):
     os.mkdir(models_folder)

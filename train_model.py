@@ -46,7 +46,7 @@ np.random.seed(0)
 
 # defining system architecture
 gpus = tf.config.list_physical_devices('GPU')
-if len(gpu) > 0:
+if len(gpus) > 0:
     tf.config.experimental.set_visible_devices(gpus[gpu_number], 'GPU')
 with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
     
@@ -240,7 +240,7 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
             logs.close()
 
             # save visual results for several test image crops
-			print("saving visual results for several test image crops")
+            print("saving visual results for several test image crops")
             enhanced_crops = sess.run(enhanced, feed_dict={phone_: test_crops, dslr_: dslr_images, adv_: all_zeros})
 
             idx = 0
