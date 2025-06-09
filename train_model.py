@@ -5,7 +5,7 @@ import imageio
 import numpy as np
 import sys
 import wandb
-import tqdm
+from tqdm import trange
 
 tf.compat.v1.disable_v2_behavior()
 
@@ -161,7 +161,7 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
     logs = open('models/' + phone + '.txt', "w+")
     logs.close()
 
-    for i in trange(num_train_iters):
+    for i in trange(num_train_iters+1):
 
         # train generator
 
