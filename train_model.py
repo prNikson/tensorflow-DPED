@@ -5,6 +5,7 @@ import imageio
 import numpy as np
 import sys
 import wandb
+import yaml
 from tqdm import trange
 
 tf.compat.v1.disable_v2_behavior()
@@ -14,6 +15,7 @@ from ssim import MultiScaleSSIM
 import models
 import utils
 import vgg
+import argparse
 
 # defining size of the training image patches
 
@@ -22,25 +24,28 @@ PATCH_HEIGHT = 100
 PATCH_SIZE = PATCH_WIDTH * PATCH_HEIGHT * 3
 
 # processing command arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('--config', default='config.yaml')
+config_file = str(parser.parse_args().config)
+with open(config_file, 'r') as file:
+    cfg = yaml.safe_load(file)
 
-phone, batch_size, train_size, learning_rate, num_train_iters, \
-w_content, w_color, w_texture, w_tv, \
-dped_dir, vgg_dir, eval_step, gpu_number = utils.process_command_args(sys.argv)
+phone = cfg['model']
+batch_size = int(cfg['batch_size'])
+train_size = int(cfg['train_size'])
+learning_rate = float(cfg['learning_rate'])
+num_train_iters = int(cfg['num_train_iters'])
+dped_dir = str(cfg['dped_dir'])
+vgg_dir = str(cfg['vgg_dir'])
+eval_step = int(cfg['eval_step'])
+gpu_number = int(cfg['gpu_number'])
 
-run = wandb.init(
-	project="project_name",
-	config={
-		"batch_size": batch_size,
-		"train_size": train_size,
-		"learning_rate": learning_rate,
-		"num_train_iters": num_train_iters,
-		"w_content": w_content,
-		"w_color": w_color,
-		"w_texture": w_texture,
-		"w_tv": w_tv,
-		"eval_step": eval_step,
-	},
-)
+w_content = int(cfg['w_content'])
+w_color = int(cfg['w_color'])
+w_texture = int(cfg['w_texture'])
+w_tv = int(cfg['w_tv'])
+
+run = wandb.init(project=cfg['wandb_project'], config=cfg)
 
 np.random.seed(0)
 
@@ -49,9 +54,8 @@ gpus = tf.config.list_physical_devices('GPU')
 if len(gpus) > 0:
     tf.config.experimental.set_visible_devices(gpus[gpu_number], 'GPU')
 with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
-    
-    # placeholders for training data
 
+    # placeholders for training data
     phone_ = tf.compat.v1.placeholder(tf.float32, [None, PATCH_SIZE])
     phone_image = tf.reshape(phone_, [-1, PATCH_HEIGHT, PATCH_WIDTH, 3])
 
@@ -118,7 +122,7 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
     loss_generator = w_content * loss_content + w_texture * loss_texture + w_color * loss_color + w_tv * loss_tv
 
     # psnr loss
-
+    
     enhanced_flat = tf.reshape(enhanced, [-1, PATCH_SIZE])
 
     loss_mse = tf.reduce_sum(tf.pow(dslr_ - enhanced_flat, 2))/(PATCH_SIZE * batch_size)
@@ -131,7 +135,6 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
 
     train_step_gen = tf.compat.v1.train.AdamOptimizer(learning_rate).minimize(loss_generator, var_list=generator_vars)
     train_step_disc = tf.compat.v1.train.AdamOptimizer(learning_rate).minimize(loss_discrim, var_list=discriminator_vars)
-
     saver = tf.compat.v1.train.Saver(var_list=generator_vars, max_to_keep=100)
 
     print('Initializing variables')
@@ -158,7 +161,7 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
     all_zeros = np.reshape(np.zeros((batch_size, 1)), [batch_size, 1])
     test_crops = test_data[np.random.randint(0, TEST_SIZE, 5), :]
 
-    logs = open('models/' + phone + '.txt', "w+")
+    logs = open(cfg['log_dir'] + '/' + phone + '.txt', "w+")
     logs.close()
 
     for i in trange(num_train_iters+1):
@@ -222,17 +225,26 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
             logs_gen = "generator losses | train: %.4g, test: %.4g | content: %.4g, color: %.4g, texture: %.4g, tv: %.4g | psnr: %.4g, ms-ssim: %.4g\n" % \
                   (train_loss_gen, test_losses_gen[0][0], test_losses_gen[0][1], test_losses_gen[0][2],
                    test_losses_gen[0][3], test_losses_gen[0][4], test_losses_gen[0][5], loss_ssim)
-            wandb.log({"discriminator_accuracy_train": train_acc_discrim, "discriminator_accuracy_test": test_accuracy_disc,\
-                "generator_losses_train": train_loss_gen, "generator_losses_test": test_losses_gen[0][0], "content": test_losses_gen[0][1],\
-                "color": test_losses_gen[0][2], "texture": test_losses_gen[0][3], "tv": test_losses_gen[0][4], "psnr": test_losses_gen[0][5],\
-                "ms-SSIM": loss_ssim,
+
+            wandb.log({
+                "train/loss_gen": train_loss_gen,
+                "test/loss_gen": test_losses_gen[0][0],
+                "loss_content": test_losses_gen[0][1],
+                "loss_color": test_losses_gen[0][2],
+                "loss_texture": test_losses_gen[0][3],
+                "loss_tv": test_losses_gen[0][4],
+                "psnr": test_losses_gen[0][5],
+                "ms-ssim": loss_ssim,
+                "train/disc_acc": train_acc_discrim,
+                "test/disc_acc": test_accuracy_disc,
             })
+
             print(logs_disc)
             print(logs_gen)
 
             # save the results to log file
 
-            logs = open('models/' + phone + '.txt', "a")
+            logs = open(cfg['log_dir'] + '/' + phone + '.txt', "a")
             logs.write(logs_disc)
             logs.write('\n')
             logs.write(logs_gen)
@@ -243,19 +255,19 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
             print("saving visual results for several test image crops")
             enhanced_crops = sess.run(enhanced, feed_dict={phone_: test_crops, dslr_: dslr_images, adv_: all_zeros})
 
-            idx = 0
-            for crop in enhanced_crops:
-                before_after = np.hstack((np.reshape(test_crops[idx], [PATCH_HEIGHT, PATCH_WIDTH, 3]), crop))
-                before_after = (before_after * 255).astype(np.uint8)
-                imageio.imwrite('results/' + str(phone)+ "_" + str(idx) + '_iteration_' + str(i) + '.png', before_after)
-                idx += 1
+            #idx = 0
+            #for crop in enhanced_crops:
+            #    before_after = np.hstack((np.reshape(test_crops[idx], [PATCH_HEIGHT, PATCH_WIDTH, 3]), crop))
+            #    before_after = (before_after * 255).astype(np.uint8)
+            #    imageio.imwrite('results/' + str(phone)+ "_" + str(idx) + '_iteration_' + str(i) + '.png', before_after)
+            #    idx += 1
 
             train_loss_gen = 0.0
             train_acc_discrim = 0.0
 
             # save the model that corresponds to the current iteration
             print("saving the model on current iteration")
-            saver.save(sess, 'models/' + str(phone) + '_iteration_' + str(i) + '.ckpt', write_meta_graph=False)
+            saver.save(sess, cfg['log_dir'] + '/' + str(phone) + '_iteration_' + str(i) + '.ckpt', write_meta_graph=False)
 
             # reload a different batch of training data
 
