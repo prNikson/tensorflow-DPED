@@ -252,8 +252,7 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
             logs.close()
 
             # save visual results for several test image crops
-            print("saving visual results for several test image crops")
-            enhanced_crops = sess.run(enhanced, feed_dict={phone_: test_crops, dslr_: dslr_images, adv_: all_zeros})
+            #enhanced_crops = sess.run(enhanced, feed_dict={phone_: test_crops, dslr_: dslr_images, adv_: all_zeros})
 
             #idx = 0
             #for crop in enhanced_crops:
@@ -273,4 +272,5 @@ with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
 
             del train_data
             del train_answ
-            train_data, train_answ = load_batch(phone, dped_dir, train_size, PATCH_SIZE)
+            if i != 20000:
+                train_data, train_answ = load_batch(phone, dped_dir, train_size, PATCH_SIZE)
