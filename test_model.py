@@ -9,15 +9,34 @@ import utils
 import os
 import sys
 import os
+import yaml
+from tqdm import tqdm
+import argparse
 
 
 tf.compat.v1.disable_v2_behavior()
 
 # process command arguments
-phone, dped_dir, test_subset, iteration, resolution, use_gpu = utils.process_test_model_args(sys.argv)
+#phone, dped_dir, test_subset, iteration, resolution, use_gpu = utils.process_test_model_args(sys.argv)
 
-if not os.path.exists(models_folder):
-    os.mkdir(models_folder)
+parser = argparse.ArgumentParser()
+parser.add_argument('--config', default='test_configs/test_config.yaml')
+config_file = str(parser.parse_args().config)
+
+with open(config_file, 'r') as file:
+    cfg = yaml.safe_load(file)
+
+use_gpu = 'true'
+phone = cfg['model']
+dped_dir = cfg['dped_dir']
+test_subset = cfg['subset']
+iteration = cfg['iteration']
+resolution = 'orig'
+models_folder = cfg['model_dir']
+result_dir = cfg['result_dir']
+
+if not os.path.exists(result_dir):
+    os.mkdir(result_dir)
 
 # get all available image resolutions
 res_sizes = utils.get_resolutions()
@@ -25,8 +44,12 @@ res_sizes = utils.get_resolutions()
 # get the specified image resolution
 IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_SIZE = utils.get_specified_res(res_sizes, phone, resolution)
 # disable gpu if specified
+physical_devices = tf.config.list_physical_devices('GPU')
 config = tf.compat.v1.ConfigProto(device_count={'GPU': 0}) if use_gpu == "false" else None
-
+tf.config.set_logical_device_configuration(
+    physical_devices[0],
+    [tf.config.LogicalDeviceConfiguration(memory_limit=10000)]
+)
 # create placeholders for input images
 x_ = tf.compat.v1.placeholder(tf.float32, [None, IMAGE_SIZE])
 x_image = tf.reshape(x_, [-1, IMAGE_HEIGHT, IMAGE_WIDTH, 3])
@@ -87,11 +110,11 @@ with tf.compat.v1.Session(config=config) as sess:
             saver = tf.compat.v1.train.Saver()
             saver.restore(sess, models_folder + "/" + phone + "_iteration_" + str(i) + ".ckpt")
 
-            for photo in test_photos:
+            for photo in tqdm(test_photos):
 
                 # load training image and crop it if necessary
 
-                print("iteration " + str(i) + ", processing image " + photo)
+                #print("iteration " + str(i) + ", processing image " + photo)
                 image = np.float16(np.array(Image.fromarray(imageio.imread(test_dir + photo))
                                             .resize([res_sizes[phone][1], res_sizes[phone][0]]))) / 255
                 #image = np.array(Image.fromarray(imageio.imread(test_dir + photo)).resize([res_sizes[phone][1], res_sizes[phone][0]]), dtype=np.float32) / 255.0
@@ -109,7 +132,7 @@ with tf.compat.v1.Session(config=config) as sess:
 
                 # save the results as .png images
                 enhanced_image = (enhanced_image * 255).astype(np.uint8)
-                before_after = (before_after * 255).astype(np.uint8)
+               # before_after = (before_after * 255).astype(np.uint8)
     
-                imageio.imwrite("visual_results/" + phone + "_" + photo_name + "_iteration_" + str(i) + "_enhanced.png", enhanced_image)
-                imageio.imwrite("visual_results/" + phone + "_" + photo_name + "_iteration_" + str(i) + "_before_after.png", before_after)
+                imageio.imwrite(result_dir + "/" + phone + "_" + photo_name + "_iteration_" + str(i) + "_enhanced.png", enhanced_image)
+                #imageio.imwrite("visual_results/" + phone + "_" + photo_name + "_iteration_" + str(i) + "_before_after.png", before_after)
