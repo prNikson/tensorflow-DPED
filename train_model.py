@@ -25,8 +25,9 @@ PATCH_SIZE = PATCH_WIDTH * PATCH_HEIGHT * 3
 
 # processing command arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--config', default='config.yaml')
+parser.add_argument('--config', default='configs/config.yaml')
 config_file = str(parser.parse_args().config)
+
 with open(config_file, 'r') as file:
     cfg = yaml.safe_load(file)
 
@@ -53,8 +54,10 @@ np.random.seed(0)
 gpus = tf.config.list_physical_devices('GPU')
 if len(gpus) > 0:
     tf.config.experimental.set_visible_devices(gpus[gpu_number], 'GPU')
-with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
 
+tf.compat.v1.reset_default_graph()
+
+with tf.Graph().as_default(), tf.compat.v1.Session() as sess:
     # placeholders for training data
     phone_ = tf.compat.v1.placeholder(tf.float32, [None, PATCH_SIZE])
     phone_image = tf.reshape(phone_, [-1, PATCH_HEIGHT, PATCH_WIDTH, 3])
